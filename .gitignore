@@ -1,0 +1,27 @@
+.DS_Store
+
+# Downloaded toolchains and archives
+downloads/
+toolchains/
+
+# Build outputs
+*.o
+*.dylib
+*.so
+*.a
+*.exe
+
+# Local executables
+/stencil_sme
+/sme_min
+/llvm-pass-flow/out/stencil_sme.prefetch
+
+# Generated IR / assembly outputs
+/*.ll
+/*.s
+/llvm-pass-flow/out/
+/llvm-pass-flow/build/
+
+# Crash/debug artifacts
+*.dSYM/
+*.crash
