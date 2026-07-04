@@ -20,11 +20,17 @@ else
   exit 1
 fi
 
-CLANGXX="${CLANGXX:-clang++}"
+CLANGXX="${CLANGXX:-/usr/bin/clang++}"
+SDKROOT="${SDKROOT:-$(xcrun --show-sdk-path 2>/dev/null || true)}"
+CLANG_SDK_FLAGS=()
+if [[ -n "${SDKROOT}" ]]; then
+  CLANG_SDK_FLAGS=(-isysroot "${SDKROOT}")
+fi
 OUT="${ROOT}/build/StencilPrefetchPass.dylib"
 mkdir -p "${ROOT}/build"
 
 "${CLANGXX}" -fPIC -shared -std=c++17 \
+  "${CLANG_SDK_FLAGS[@]}" \
   $("${LLVM_CONFIG_BIN}" --cxxflags) \
   "${ROOT}/src/StencilPrefetchPass.cpp" \
   -o "${OUT}" \
