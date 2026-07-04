@@ -2,9 +2,17 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(cd "${ROOT}/.." && pwd)"
+DEFAULT_LLVM_HOME="${REPO_ROOT}/toolchains/LLVM-22.1.8-macOS-ARM64"
+
+if [[ -z "${LLVM_HOME:-}" && -x "${DEFAULT_LLVM_HOME}/bin/llvm-config" ]]; then
+  LLVM_HOME="${DEFAULT_LLVM_HOME}"
+fi
 
 if [[ -n "${LLVM_CONFIG:-}" ]]; then
   LLVM_CONFIG_BIN="${LLVM_CONFIG}"
+elif [[ -n "${LLVM_HOME:-}" && -x "${LLVM_HOME}/bin/llvm-config" ]]; then
+  LLVM_CONFIG_BIN="${LLVM_HOME}/bin/llvm-config"
 elif command -v llvm-config >/dev/null 2>&1; then
   LLVM_CONFIG_BIN="$(command -v llvm-config)"
 else

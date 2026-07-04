@@ -54,13 +54,21 @@ Xcode 自带 LLVM 不包含 `opt` 和 `llvm-config`，不能直接构建/运行 
 ```bash
 cd /Users/alpaca/Documents/SME
 
-export LLVM_HOME=/Users/alpaca/Documents/SME/toolchains/LLVM-22.1.8-macOS-ARM64
+llvm-pass-flow/scripts/build_pass_macos_dynamic.sh
+llvm-pass-flow/scripts/run_pass.sh
+```
+
+如果 LLVM 工具链位于默认路径
+`/Users/alpaca/Documents/SME/toolchains/LLVM-22.1.8-macOS-ARM64`，脚本会自动发现，
+不需要手动设置环境变量。
+
+如果换了 LLVM 安装位置，可以手动指定：
+
+```bash
+export LLVM_HOME=/path/to/LLVM
 export LLVM_CONFIG=$LLVM_HOME/bin/llvm-config
 export OPT=$LLVM_HOME/bin/opt
 export CLANGXX=$LLVM_HOME/bin/clang++
-
-llvm-pass-flow/scripts/build_pass_macos_dynamic.sh
-llvm-pass-flow/scripts/run_pass.sh
 ```
 
 期望输出类似：
