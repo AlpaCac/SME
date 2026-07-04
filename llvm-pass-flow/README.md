@@ -6,6 +6,7 @@
 ## 目录内容
 
 - `src/StencilPrefetchPass.cpp`：LLVM 新 Pass Manager 插件源码。
+- `PASS_DESIGN.md`：说明 LLVM Pass 的代码结构、工作流程和工作原理。
 - `CMakeLists.txt`：CMake 构建入口，适合完整 LLVM + CMake 环境。
 - `scripts/check_toolchain.sh`：检查是否存在完整 LLVM 工具链。
 - `scripts/build_pass.sh`：使用 CMake 构建 pass 插件。
