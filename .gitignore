@@ -26,3 +26,5 @@ toolchains/
 # Crash/debug artifacts
 *.dSYM/
 *.crash
+*.trace/
+/llvm-pass-flow/out/*_counters_toc.xml

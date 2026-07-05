@@ -1,0 +1,3 @@
+timestamp,label,nx,ny,warmup,iterations,total_ms,avg_ms,mcells_per_s,status
+2026-07-05T11:38:48Z,baseline,256,256,3,20,0.404167,0.020208,3192.541697,PASSED
+2026-07-05T11:38:48Z,prefetch,256,256,3,20,0.833083,0.041654,1548.849274,PASSED

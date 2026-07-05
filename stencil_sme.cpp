@@ -1,6 +1,7 @@
 #include <arm_sme.h>
 #include <arm_sve.h>
 
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -68,7 +69,24 @@ void stencil2d5p_sme_kernel(const float* input, float* actual, int nx, int ny)
 
 }
 
-static bool run_stencil2d5p(int nx, int ny) {
+static void call_stencil2d5p_sme_kernel(const float* input, float* actual,
+                                        int nx, int ny) {
+    register const float* arg0 asm("x0") = input;
+    register float* arg1 asm("x1") = actual;
+    register int arg2 asm("w2") = nx;
+    register int arg3 asm("w3") = ny;
+
+    asm volatile(
+        ".inst 0xd503437f\n"  // smstart sm
+        "bl _stencil2d5p_sme_kernel\n"
+        ".inst 0xd503427f"    // smstop sm
+        : "+r"(arg0), "+r"(arg1), "+r"(arg2), "+r"(arg3)
+        :
+        : "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12",
+          "x13", "x14", "x15", "x16", "x17", "memory");
+}
+
+static bool run_stencil2d5p(int nx, int ny, int iterations, int warmup) {
     constexpr float center_weight = 0.50f;
     constexpr float neighbor_weight = 0.125f;
 
@@ -95,19 +113,29 @@ static bool run_stencil2d5p(int nx, int ny) {
         }
     }
 
-    register const float* arg0 asm("x0") = input.data();
-    register float* arg1 asm("x1") = actual.data();
-    register int arg2 asm("w2") = nx;
-    register int arg3 asm("w3") = ny;
+    for (int i = 0; i < warmup; ++i) {
+        call_stencil2d5p_sme_kernel(input.data(), actual.data(), nx, ny);
+    }
 
-    asm volatile(
-        ".inst 0xd503437f\n"  // smstart sm
-        "bl _stencil2d5p_sme_kernel\n"
-        ".inst 0xd503427f"    // smstop sm
-        : "+r"(arg0), "+r"(arg1), "+r"(arg2), "+r"(arg3)
-        :
-        : "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12",
-          "x13", "x14", "x15", "x16", "x17", "memory");
+    const auto begin = std::chrono::steady_clock::now();
+    for (int i = 0; i < iterations; ++i) {
+        call_stencil2d5p_sme_kernel(input.data(), actual.data(), nx, ny);
+    }
+    const auto end = std::chrono::steady_clock::now();
+
+    const double total_ms =
+        std::chrono::duration<double, std::milli>(end - begin).count();
+    const double avg_ms = total_ms / static_cast<double>(iterations);
+    const double cells =
+        static_cast<double>(nx - 2) * static_cast<double>(ny - 2);
+    const double mcells_per_s = cells * static_cast<double>(iterations) /
+                                (total_ms * 1000.0);
+
+    std::printf("METRIC nx=%d ny=%d warmup=%d iterations=%d\n",
+                nx, ny, warmup, iterations);
+    std::printf("METRIC kernel_total_ms=%.6f kernel_avg_ms=%.6f "
+                "mcells_per_s=%.6f\n",
+                total_ms, avg_ms, mcells_per_s);
 
     return check_result(actual, expected, 1.0e-6f);
 }
@@ -115,8 +143,14 @@ static bool run_stencil2d5p(int nx, int ny) {
 int main(int argc, char** argv) {
     const int nx = argc > 1 ? std::atoi(argv[1]) : 256;
     const int ny = argc > 2 ? std::atoi(argv[2]) : 256;
+    const int iterations = argc > 3 ? std::atoi(argv[3]) : 50;
+    const int warmup = argc > 4 ? std::atoi(argv[4]) : 5;
     if (nx < 3 || ny < 3) {
         std::printf("nx and ny must be >= 3\n");
+        return EXIT_FAILURE;
+    }
+    if (iterations < 1 || warmup < 0) {
+        std::printf("iterations must be >= 1 and warmup must be >= 0\n");
         return EXIT_FAILURE;
     }
 
@@ -125,5 +159,6 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    return run_stencil2d5p(nx, ny) ? EXIT_SUCCESS : EXIT_FAILURE;
+    return run_stencil2d5p(nx, ny, iterations, warmup) ? EXIT_SUCCESS
+                                                       : EXIT_FAILURE;
 }
