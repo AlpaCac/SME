@@ -4,6 +4,9 @@
 downloads/
 toolchains/
 
+# Local papers and references
+/论文/
+
 # Build outputs
 *.o
 *.dylib
@@ -14,12 +17,10 @@ toolchains/
 # Local executables
 /stencil_sme
 /sme_min
-/llvm-pass-flow/out/stencil_sme.prefetch
 
 # Generated IR / assembly outputs
 /*.ll
 /*.s
-/llvm-pass-flow/out/
 /llvm-pass-flow/build/
 
 # Crash/debug artifacts
